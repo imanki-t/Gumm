@@ -42,12 +42,18 @@ fun DashboardScreen(
     val matrixWheel by viewModel.gummMatrixWheel.collectAsState()
     val studyLogs by viewModel.studySessions.collectAsState()
 
+    val gummQuery by viewModel.gummAiQuery.collectAsState()
+    val gummResponse by viewModel.gummAiResponse.collectAsState()
+    val isGummLoading by viewModel.isGummAiLoading.collectAsState()
+    val userProfile by viewModel.userProfile.collectAsState()
+    val studentName = userProfile?.userName ?: "Student"
+
     var isOverdriveActive by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.Transparent)
             .verticalScroll(rememberScrollState())
             .padding(bottom = 100.dp, start = 20.dp, end = 20.dp, top = 20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -64,7 +70,7 @@ fun DashboardScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "ECHO NOTES PROTOCOL 🪐",
+                        text = "GUMM COGNITIVE CORE",
                         fontWeight = FontWeight.Black,
                         fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,
@@ -72,7 +78,7 @@ fun DashboardScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Hello, Student! 👋🏼",
+                        text = "Hello, $studentName!",
                         fontWeight = FontWeight.Black,
                         fontSize = 24.sp,
                         color = Color.Black
@@ -101,6 +107,140 @@ fun DashboardScreen(
             }
         }
 
+        // GUMM AI CONSULTATIVE COACHING PLAYGROUND
+        CozyCard(
+            backgroundColor = CozyColors.BananaYellow,
+            cornerRadius = 16.dp
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "GUMM COG-CHAT AI COACH",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = Color.Black,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (isGummLoading) {
+                        CircularProgressIndicator(
+                            color = CozyColors.NeonCoral,
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.5.dp
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Request personalized local/cloud math/science strategy, anxiety comfort, or active recall triggers from Gumm:",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.DarkGray
+                )
+
+                // Quick Prompt Bubbles
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    val promptOptions = listOf(
+                        "Study Plan" to "Analyze my syllabus and give me 3-step active recall advice.",
+                        "Anxiety Relief" to "I am feeling extremely anxious about my upcoming exams. Comfort me.",
+                        "Physics Tip" to "Give me a high-yield focus trigger tip to begin physics/math revision."
+                    )
+                    promptOptions.forEach { (label, promptText) ->
+                        Box(
+                            modifier = Modifier
+                                .background(Color.White, RoundedCornerShape(20.dp))
+                                .border(2.dp, Color.Black, RoundedCornerShape(20.dp))
+                                .clickable { viewModel.askGummAi(promptText) }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = label,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 10.sp,
+                                color = Color.Black
+                            )
+                        }
+                    }
+                }
+
+                // Input Field Group
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    CozyTextField(
+                        value = gummQuery,
+                        onValueChange = { viewModel.gummAiQuery.value = it },
+                        placeholder = "Ask Gumm anything...",
+                        modifier = Modifier.weight(1f)
+                    )
+                    CozyIconButton(
+                        onClick = { viewModel.askGummAi() },
+                        backgroundColor = CozyColors.NeonCoral,
+                        cornerRadius = 12.dp
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "Submit Request",
+                            tint = Color.Black,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                // AI Response Field (Visible only when response is not empty)
+                AnimatedVisibility(
+                    visible = gummResponse.isNotEmpty()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .border(3.dp, Color.Black, RoundedCornerShape(12.dp))
+                            .padding(14.dp)
+                    ) {
+                        Column {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(CozyColors.BubblegumPink, CircleShape)
+                                )
+                                Text(
+                                    text = "GUMM AI COACH:",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 11.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = CozyColors.BubblegumPink
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = gummResponse,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // EMERGENCY OVERDRIVE TRIGGER
         CozyCard(
             backgroundColor = if (isOverdriveActive) CozyColors.NeonCoral else Color.White,
@@ -113,7 +253,7 @@ fun DashboardScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "EMERGENCY OVERDRIVE SWITCH 📡",
+                        text = "EMERGENCY OVERDRIVE SWITCH",
                         fontWeight = FontWeight.Black,
                         fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,
@@ -150,7 +290,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "TIME BUDGET OPTIMIZATION MATRIX ⌛",
+                    text = "TIME BUDGET OPTIMIZATION MATRIX",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -200,7 +340,7 @@ fun DashboardScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No pending revisions fit this slot! Add more chapters, log homework, or slide to allocate more time! 💖",
+                            text = "No pending revisions fit this slot! Add more chapters, log homework, or slide to allocate more time.",
                             textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
@@ -262,7 +402,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "DECISION RESOLVER ENGINE 💡",
+                    text = "DECISION RESOLVER ENGINE",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -360,7 +500,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "STUDY / HOMEWORK / REVISE SYNC WHEEL 🛞",
+                    text = "STUDY LOG / REVISE SYNC ENGINE",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -426,7 +566,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "EXAM MATRIX SYLLABUS WHEELS 🍭",
+                    text = "EXAM MATRIX SYLLABUS STATUS WHEELS",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -492,7 +632,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "FOCUS LOGS CHRONOLOGY 📊",
+                    text = "FOCUS LOGS CHRONOLOGY",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -501,7 +641,7 @@ fun DashboardScreen(
 
                 if (studyLogs.isEmpty()) {
                     Text(
-                        text = "No study sessions logged yet! Go to Syllabus Matrix, expand a chapter, and start a local study session countdown. 🧉",
+                        text = "No study sessions logged yet! Go to Syllabus Matrix, expand a chapter, and start a local study session countdown.",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Gray,

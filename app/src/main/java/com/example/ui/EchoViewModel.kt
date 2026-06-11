@@ -36,15 +36,135 @@ class EchoViewModel(application: Application) : AndroidViewModel(application) {
     val recurrentSkills: StateFlow<List<RecurrentSkill>> = repository.recurrentSkills
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val isProfileLoading = MutableStateFlow(true)
+
+    val isOnboardedState = MutableStateFlow(
+        application.getSharedPreferences("echo_notes_prefs", android.content.Context.MODE_PRIVATE)
+            .getBoolean("is_onboarded", false)
+    )
+
     val userProfile: StateFlow<UserProfile?> = repository.userProfile
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .onEach { isProfileLoading.value = false }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val studySessions: StateFlow<List<StudySessionLog>> = repository.studySessions
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val peakEfficiencyWindows = MutableStateFlow<List<PeakEfficiencyValue>>(emptyList())
+    val isPeakEfficiencyLoading = MutableStateFlow(false)
+
+    init {
+        // Core persistent backup recovery on launch
+        viewModelScope.launch {
+            val sharedPrefs = application.getSharedPreferences("echo_notes_prefs", android.content.Context.MODE_PRIVATE)
+            val hasOnboardedSharedPref = sharedPrefs.getBoolean("is_onboarded", false)
+            if (hasOnboardedSharedPref) {
+                val directProfile = repository.getUserProfileDirect()
+                if (directProfile == null) {
+                    val defaultProfile = UserProfile(
+                        id = 1,
+                        gradeLevel = "High School",
+                        availableHoursWeekday = 2.0f,
+                        availableHoursWeekend = 4.0f,
+                        peakFocusHours = "Afternoon",
+                        attentionSpanMinutes = 30,
+                        mathDifficulty = 3,
+                        scienceDifficulty = 3,
+                        languagesDifficulty = 3,
+                        humanitiesDifficulty = 3,
+                        isOnboarded = true,
+                        currentEnergyLevel = 3
+                    )
+                    repository.insertUserProfile(defaultProfile)
+                    seedDefaultSubjects()
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            combine(studySessions, subjects, chapters, userProfile) { sessions, subs, chaps, profile ->
+                TriggerEvent(sessions, subs, chaps, profile)
+            }.collectLatest { event ->
+                isPeakEfficiencyLoading.value = true
+                try {
+                    val apikey = com.example.BuildConfig.GEMINI_API_KEY
+                    val result = GummEngine.getPeakEfficiencyWindows(
+                        logs = event.sessions,
+                        subjects = event.subs,
+                        chapters = event.chaps,
+                        userProfile = event.profile,
+                        apiKey = apikey
+                    )
+                    peakEfficiencyWindows.value = result
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    isPeakEfficiencyLoading.value = false
+                }
+            }
+        }
+    }
+
+    private data class TriggerEvent(
+        val sessions: List<StudySessionLog>,
+        val subs: List<Subject>,
+        val chaps: List<Chapter>,
+        val profile: UserProfile?
+    )
+
+    fun refreshPeakEfficiency() {
+        viewModelScope.launch {
+            isPeakEfficiencyLoading.value = true
+            try {
+                val apikey = com.example.BuildConfig.GEMINI_API_KEY
+                val result = GummEngine.getPeakEfficiencyWindows(
+                    logs = studySessions.value,
+                    subjects = subjects.value,
+                    chapters = chapters.value,
+                    userProfile = userProfile.value,
+                    apiKey = apikey
+                )
+                peakEfficiencyWindows.value = result
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                isPeakEfficiencyLoading.value = false
+            }
+        }
+    }
+
     // Interactive UI and Engine states
     val timeBudgetMinutes = MutableStateFlow(45)
     val userEnergyLevel = MutableStateFlow(3) // 1 to 5
+
+    // Gumm AI Direct Chat Integration Setup
+    val gummAiQuery = MutableStateFlow("")
+    val gummAiResponse = MutableStateFlow("")
+    val isGummAiLoading = MutableStateFlow(false)
+
+    fun askGummAi(customPrompt: String? = null) {
+        val promptToUse = customPrompt ?: gummAiQuery.value
+        if (promptToUse.isBlank()) return
+        gummAiQuery.value = ""
+        isGummAiLoading.value = true
+        gummAiResponse.value = "Calibrating biological core... synapsing neural matrix... Gumm is thinking 🔮"
+        viewModelScope.launch {
+            try {
+                val apiKey = com.example.BuildConfig.GEMINI_API_KEY
+                if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
+                    gummAiResponse.value = "Unable to connect with Gumm AI. Please enter a valid 'GEMINI_API_KEY' in the AI Studio Secrets panel to enable Gumm's live cognitive neural engine! 🪐\n\n(Local on-device statistical learning models remain fully active and running!)"
+                    return@launch
+                }
+                val systemInstruction = "You are Gumm, a friendly, ultra-knowledgeable, cozy-pop styled AI study coach for high school and college students. Provide actionable, extremely concise, and encouraging study strategy tips or advice."
+                val response = GummEngine.askGeminiDirect(promptToUse, systemInstruction, apiKey)
+                gummAiResponse.value = response
+            } catch (e: Exception) {
+                gummAiResponse.value = "Synapse latency error: ${e.localizedMessage ?: "Failed to reach Gumm AI brain."}"
+            } finally {
+                isGummAiLoading.value = false
+            }
+        }
+    }
 
     // Timer States
     val activeTimerChapterId = MutableStateFlow<Int?>(null)
@@ -113,38 +233,25 @@ class EchoViewModel(application: Application) : AndroidViewModel(application) {
             )
             repository.insertUserProfile(profile)
 
+            // Save onboarding state in SharedPreferences
+            val sharedPrefs = getApplication<Application>().getSharedPreferences("echo_notes_prefs", android.content.Context.MODE_PRIVATE)
+            sharedPrefs.edit().putBoolean("is_onboarded", true).apply()
+            isOnboardedState.value = true
+
             // Seed default cute subjects on first launch to ensure excellent demo flow
             seedDefaultSubjects()
         }
     }
 
-    private suspend fun seedDefaultSubjects() {
-        val existing = subjects.value
-        if (existing.isEmpty()) {
-            val defaults = listOf(
-                Subject(name = "Mathematics AP", color = "#FEF1B5", iconName = "calculate"), // Banana Yellow
-                Subject(name = "Physics Kinetics", color = "#B3E5FC", iconName = "science"),  // Sky Blue
-                Subject(name = "Chemistry Lab", color = "#CBF3D2", iconName = "vaccines"),     // Mint Green
-                Subject(name = "English Poetry", color = "#FFD1DC", iconName = "menu_book")    // Strawberry Pink
-            )
-            defaults.forEach {
-                val subId = db.echoDao().insertSubject(it).toInt()
-                // Seed standard chapters
-                when (it.name) {
-                    "Mathematics AP" -> {
-                        db.echoDao().insertChapter(Chapter(subjectId = subId, name = "Arithmetic Progressions", difficultyLevel = 4, state = "Started"))
-                        db.echoDao().insertChapter(Chapter(subjectId = subId, name = "Limits and Integrals", difficultyLevel = 5, state = "Started"))
-                    }
-                    "Physics Kinetics" -> {
-                        db.echoDao().insertChapter(Chapter(subjectId = subId, name = "Optics & Reflection", difficultyLevel = 3, state = "Mastered"))
-                        db.echoDao().insertChapter(Chapter(subjectId = subId, name = "Rotational Mechanics", difficultyLevel = 5, state = "Started"))
-                    }
-                    "Chemistry Lab" -> {
-                        db.echoDao().insertChapter(Chapter(subjectId = subId, name = "Chemical Kinetics", difficultyLevel = 4, state = "Started"))
-                    }
-                }
-            }
+    fun updateUserProfileName(name: String, email: String) {
+        viewModelScope.launch {
+            val profile = repository.getUserProfileDirect() ?: UserProfile()
+            repository.insertUserProfile(profile.copy(userName = name, googleEmail = email))
         }
+    }
+
+    private suspend fun seedDefaultSubjects() {
+        // Start fresh with no pre-existing subjects as per user request.
     }
 
     // Subject operations

@@ -64,36 +64,130 @@ fun SyllabusScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.Transparent)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Top Header
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "SYLLABUS MATRIX",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Black,
+                color = Color.Black
+            )
+            Text(
+                text = "Design subjects, set chapters, and manage timelines.",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Gray
+            )
+        }
+
+        // Action trigger Button below the header
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = "SYLLABUS MATRIX 📖",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color.Black
-                )
-                Text(
-                    text = "Design subjects, set chapters, and manage timelines.",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Gray
-                )
-            }
-
             CozyButton(
-                onClick = { showAddSubjectDialog = true },
-                backgroundColor = CozyColors.BananaYellow,
-                text = "+ Subject"
+                onClick = { showAddSubjectDialog = !showAddSubjectDialog },
+                backgroundColor = if (showAddSubjectDialog) CozyColors.NeonCoral else CozyColors.BananaYellow,
+                text = if (showAddSubjectDialog) "Collapse Subject Configurator" else "➕ Create New Subject"
             )
+        }
+
+        // Horizontal Configurator Box below the button and header
+        if (showAddSubjectDialog) {
+            CozyCard(
+                backgroundColor = Color.White,
+                cornerRadius = 20.dp
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "NEW SUBJECT HORIZONTAL CONFIGURATOR",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color.Black
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Title input (weighted)
+                        Box(modifier = Modifier.weight(1.5f)) {
+                            CozyTextField(
+                                value = currentSubjectName,
+                                onValueChange = { currentSubjectName = it },
+                                placeholder = "Subject Title (e.g. Science)"
+                            )
+                        }
+
+                        // Colors
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            pastelColors.forEach { (hex, name) ->
+                                val isChosen = selectedColor == hex
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(
+                                            Color(android.graphics.Color.parseColor(hex)),
+                                            CircleShape
+                                        )
+                                        .border(if (isChosen) 2.5.dp else 1.dp, Color.Black, CircleShape)
+                                        .clickable { selectedColor = hex }
+                                )
+                            }
+                        }
+
+                        // Icons
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            cuteIcons.forEach { (name, vec) ->
+                                val isChosen = selectedIcon == name
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(
+                                            if (isChosen) CozyColors.BananaYellow else Color.White,
+                                            RoundedCornerShape(6.dp)
+                                        )
+                                        .border(1.5.dp, Color.Black, RoundedCornerShape(6.dp))
+                                        .clickable { selectedIcon = name }
+                                        .padding(2.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(imageVector = vec, contentDescription = null, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+
+                        // Submit
+                        CozyButton(
+                            onClick = {
+                                if (currentSubjectName.isNotEmpty()) {
+                                    viewModel.addSubject(currentSubjectName, selectedColor, selectedIcon)
+                                    currentSubjectName = ""
+                                    showAddSubjectDialog = false
+                                }
+                            },
+                            backgroundColor = CozyColors.MintGreen,
+                            text = "Add Node ✔"
+                        )
+                    }
+                }
+            }
         }
 
         // Subjects Horizontal Carousel List
@@ -182,7 +276,7 @@ fun SyllabusScreen(
 
         // Chapters List
         Text(
-            text = "CHAPTER LIFECYCLE 🍡",
+            text = "CHAPTER LIFECYCLE",
             fontSize = 15.sp,
             fontWeight = FontWeight.Black,
             fontFamily = FontFamily.Monospace,
@@ -406,7 +500,7 @@ fun SyllabusScreen(
                                             },
                                             modifier = Modifier.weight(1f),
                                             backgroundColor = CozyColors.BananaYellow,
-                                            text = "Save Ledger ✨"
+                                            text = "Save Ledger"
                                         )
 
                                         CozyButton(
@@ -415,7 +509,7 @@ fun SyllabusScreen(
                                             },
                                             modifier = Modifier.weight(1.2f),
                                             backgroundColor = CozyColors.MintGreen,
-                                            text = "⏱️ Start Focus"
+                                            text = "Start Focus"
                                         )
                                     }
                                 }
@@ -425,91 +519,6 @@ fun SyllabusScreen(
                 }
             }
         }
-    }
-
-    // SUBJECT POPUP DIALOG
-    if (showAddSubjectDialog) {
-        AlertDialog(
-            onDismissRequest = { showAddSubjectDialog = false },
-            confirmButton = {},
-            title = {
-                Text("Custom Subject Profiler 🎨", fontWeight = FontWeight.Black, fontSize = 20.sp)
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Design your specific syllabus category folder below:", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
-                    CozyTextField(
-                        value = currentSubjectName,
-                        onValueChange = { currentSubjectName = it },
-                        placeholder = "e.g. Molecular Biochemistry"
-                    )
-
-                    // Color tokens
-                    Text("Select Pastel Token:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        pastelColors.forEach { (hex, name) ->
-                            val isChosen = selectedColor == hex
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .background(
-                                        Color(android.graphics.Color.parseColor(hex)),
-                                        CircleShape
-                                    )
-                                    .border(if (isChosen) 3.dp else 1.dp, Color.Black, CircleShape)
-                                    .clickable { selectedColor = hex }
-                            )
-                        }
-                    }
-
-                    // Cute minimalist icons index
-                    Text("Select Minimailst Icon:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        cuteIcons.forEach { (name, vec) ->
-                            val isChosen = selectedIcon == name
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .background(
-                                        if (isChosen) CozyColors.BananaYellow else Color.White,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .border(2.dp, Color.Black, RoundedCornerShape(8.dp))
-                                    .clickable { selectedIcon = name }
-                                    .padding(4.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(imageVector = vec, contentDescription = null, modifier = Modifier.size(20.dp))
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        CozyButton(
-                            onClick = {
-                                if (currentSubjectName.isNotEmpty()) {
-                                    viewModel.addSubject(currentSubjectName, selectedColor, selectedIcon)
-                                    currentSubjectName = ""
-                                    showAddSubjectDialog = false
-                                }
-                            },
-                            backgroundColor = CozyColors.MintGreen,
-                            text = "Save Subject ✔️"
-                        )
-                        CozyButton(
-                            onClick = { showAddSubjectDialog = false },
-                            backgroundColor = Color.LightGray,
-                            text = "Cancel"
-                        )
-                    }
-                }
-            },
-            modifier = Modifier
-                .border(3.dp, Color.Black, RoundedCornerShape(16.dp))
-                .background(Color.White, RoundedCornerShape(16.dp))
-        )
     }
 
     // CHAPTER POPUP DIALOG
@@ -560,7 +569,7 @@ fun SyllabusScreen(
                                 }
                             },
                             backgroundColor = CozyColors.MintGreen,
-                            text = "Add Node ✔"
+                            text = "Add Node"
                         )
                         CozyButton(
                             onClick = { showAddChapterDialog = false },

@@ -60,7 +60,7 @@ fun HomeworkScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.Transparent)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -72,7 +72,7 @@ fun HomeworkScreen(
         ) {
             Column {
                 Text(
-                    text = "HOMEWORK LEDGER 📝",
+                    text = "HOMEWORK LEDGER",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.Black

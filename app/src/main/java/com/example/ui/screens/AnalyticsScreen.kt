@@ -31,6 +31,8 @@ fun AnalyticsScreen(
     val subjects by viewModel.subjects.collectAsState()
     val chapters by viewModel.chapters.collectAsState()
     val logs by viewModel.studySessions.collectAsState()
+    val peakSuggestions by viewModel.peakEfficiencyWindows.collectAsState()
+    val isAnalyzing by viewModel.isPeakEfficiencyLoading.collectAsState()
 
     val habitCorrelations = remember(logs) {
         GummEngine.getHabitCorrelations(logs)
@@ -39,7 +41,7 @@ fun AnalyticsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.Transparent)
             .verticalScroll(rememberScrollState())
             .padding(bottom = 100.dp, start = 20.dp, end = 20.dp, top = 20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -47,7 +49,7 @@ fun AnalyticsScreen(
         // Top Header
         Column {
             Text(
-                text = "ANALYTICS CENTER 📊",
+                text = "ANALYTICS CENTER",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
                 color = Color.Black
@@ -60,6 +62,179 @@ fun AnalyticsScreen(
             )
         }
 
+        // Peak Efficiency Windows (AI-Driven)
+        CozyCard(
+            backgroundColor = Color.White,
+            cornerRadius = 16.dp
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "PEAK EFFICIENCY WINDOWS",
+                            fontWeight = FontWeight.Black,
+                            fontSize = 14.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = "AI-Driven biological clock & focus correlation profiles",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    if (isAnalyzing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = CozyColors.BubblegumPink,
+                            strokeWidth = 3.dp
+                        )
+                    } else {
+                        IconButton(
+                            onClick = { viewModel.refreshPeakEfficiency() },
+                            modifier = Modifier
+                                .background(CozyColors.CreamBackground, RoundedCornerShape(10.dp))
+                                .border(2.dp, Color.Black, RoundedCornerShape(10.dp))
+                                .size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Recalculate Focus Efficiency",
+                                tint = Color.Black,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (peakSuggestions.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No correlations computed yet.\nComplete focus sessions to seed insights!",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        peakSuggestions.forEach { sug ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(CozyColors.CreamBackground, RoundedCornerShape(12.dp))
+                                    .border(3.dp, Color.Black, RoundedCornerShape(12.dp))
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Subject Color bar
+                                Box(
+                                    modifier = Modifier
+                                        .width(6.dp)
+                                        .height(72.dp)
+                                        .background(
+                                            Color(android.graphics.Color.parseColor(sug.subjectColor)),
+                                            RoundedCornerShape(3.dp)
+                                        )
+                                        .border(1.5.dp, Color.Black, RoundedCornerShape(3.dp))
+                                )
+
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = sug.subjectName,
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 13.sp,
+                                            color = Color.Black
+                                        )
+
+                                        // Badge highlighting source
+                                        Box(
+                                            modifier = Modifier
+                                                .background(
+                                                    if (sug.isAiGenerated) CozyColors.SkyBlue else CozyColors.MintGreen,
+                                                    RoundedCornerShape(6.dp)
+                                                )
+                                                .border(1.5.dp, Color.Black, RoundedCornerShape(6.dp))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = if (sug.isAiGenerated) "GEMINI AI" else "LOCAL ML",
+                                                fontWeight = FontWeight.Black,
+                                                fontSize = 9.sp,
+                                                color = Color.Black
+                                            )
+                                        }
+                                    }
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Timeline,
+                                            contentDescription = null,
+                                            tint = CozyColors.NeonCoral,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Text(
+                                            text = sug.timeWindow,
+                                            fontWeight = FontWeight.Black,
+                                            fontSize = 12.sp,
+                                            color = CozyColors.NeonCoral
+                                        )
+                                        
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        
+                                        Text(
+                                            text = "• Flow Score: ${sug.score}%",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.sp,
+                                            color = Color.DarkGray
+                                        )
+                                    }
+
+                                    Text(
+                                        text = sug.reason,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.DarkGray,
+                                        lineHeight = 15.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // 1. SUBJECT CONFIDENCE QUADRANT (2D SCATTER PLOT)
         CozyCard(
             backgroundColor = Color.White,
@@ -70,7 +245,7 @@ fun AnalyticsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "SUBJECT CONFIDENCE QUADRANT 🎯",
+                    text = "SUBJECT CONFIDENCE QUADRANT",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -182,7 +357,7 @@ fun AnalyticsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "PEAK COGNITIVE EFFICIENCY BARS 🚀",
+                    text = "PEAK COGNITIVE EFFICIENCY BARS",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -257,7 +432,7 @@ fun AnalyticsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "GUMM HABIT CORRELATIONS LOG ⚡",
+                    text = "GUMM HABIT CORRELATIONS LOG",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,

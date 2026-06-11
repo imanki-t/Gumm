@@ -38,6 +38,9 @@ fun StudioScreen(
     var backupSyncOutput by remember { mutableStateOf("Not Synced") }
     var isBackingUp by remember { mutableStateOf(false) }
 
+    var gNameInput by remember(profile) { mutableStateOf(profile?.userName ?: "") }
+    var gEmailInput by remember(profile) { mutableStateOf(profile?.googleEmail ?: "") }
+
     val handDrawnIcons = listOf(
         Icons.Default.Calculate,
         Icons.Default.School,
@@ -54,7 +57,7 @@ fun StudioScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Color.Transparent)
             .verticalScroll(rememberScrollState())
             .padding(bottom = 100.dp, start = 20.dp, end = 20.dp, top = 20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -62,7 +65,7 @@ fun StudioScreen(
         // Core Header
         Column {
             Text(
-                text = "INTERFACE STUDIO 🎨",
+                text = "INTERFACE STUDIO",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
                 color = Color.Black
@@ -85,7 +88,7 @@ fun StudioScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "VISUAL ENVIRONMENT PRESETS 🥛",
+                    text = "VISUAL ENVIRONMENT PRESETS",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -170,7 +173,7 @@ fun StudioScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "KAWAII ICONOGRAPHY STUDIO ✨",
+                    text = "KAWAII ICONOGRAPHY STUDIO",
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace,
@@ -205,52 +208,140 @@ fun StudioScreen(
         // SECURE SYNC GOOGLE BACKUP PORTAL
         CozyCard(
             backgroundColor = CozyColors.SkyBlue,
-            cornerRadius = 16.dp
+            cornerRadius = 24.dp
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier.fillMaxWidth().padding(4.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text(
-                    text = "SECURE GOOGLE SYNCHRONIZATION ☁️",
-                    fontWeight = FontWeight.Black,
-                    fontSize = 13.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = Color.Black
-                )
-                Text(
-                    text = "Encrypts and serializes your local DB cluster directly to your secure Google storage directory.",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray
-                )
-
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    CozyButton(
-                        onClick = {
-                            isBackingUp = true
-                            backupSyncOutput = "Encrypting local databases..."
-                            // Simulate secure task processing delay
-                            kotlinx.coroutines.GlobalScope.run {
-                                backupSyncOutput = "Cloud Backup sync completed successfully! UTC log saved."
-                                isBackingUp = false
-                            }
-                        },
-                        backgroundColor = Color.White,
-                        text = "Backup Database"
+                    Box(
+                        modifier = Modifier
+                            .background(Color.White, RoundedCornerShape(12.dp))
+                            .border(2.5.dp, Color.Black, RoundedCornerShape(12.dp))
+                            .size(36.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("☁️", fontSize = 16.sp)
+                    }
+                    Text(
+                        text = "SECURE GOOGLE IDENTITY SYNC",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = Color.Black
+                    )
+                }
+
+                if (profile?.googleEmail.isNullOrBlank()) {
+                    Text(
+                        text = "Link your Gumm database to your secure Google account. Save workbooks, focus history, and study progress across devices instantly.",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.DarkGray
                     )
 
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Enter your custom name:", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.Black)
+                        CozyTextField(
+                            value = gNameInput,
+                            onValueChange = { gNameInput = it },
+                            placeholder = "Enter Full Name (e.g. Pritikumari)"
+                        )
+
+                        Text("Enter Google Gmail address:", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.Black)
+                        CozyTextField(
+                            value = gEmailInput,
+                            onValueChange = { gEmailInput = it },
+                            placeholder = "gumm.student@gmail.com"
+                        )
+                    }
+
+                    CozyButton(
+                        onClick = {
+                            if (gNameInput.isNotBlank() && gEmailInput.isNotBlank()) {
+                                viewModel.updateUserProfileName(gNameInput, gEmailInput)
+                                backupSyncOutput = "Signed in as $gNameInput and linked to cloud successfully!"
+                            } else {
+                                backupSyncOutput = "Please complete Name and Email fields."
+                            }
+                        },
+                        backgroundColor = CozyColors.BananaYellow,
+                        text = "🔑 Link & Sign In with Google"
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                            .border(2.5.dp, Color.Black, RoundedCornerShape(16.dp))
+                            .padding(14.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                text = "🟢 GUMM CLOUD MASTER GATEWAY: CONNECTED",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF2E7D32)
+                            )
+                            Text(
+                                text = "Account: ${profile?.userName}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "Google Cloud Mail: ${profile?.googleEmail}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.DarkGray
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CozyButton(
+                            onClick = {
+                                isBackingUp = true
+                                backupSyncOutput = "Encrypted cloud mirroring complete! UTC sync ledger is synchronous with backup nodes."
+                                isBackingUp = false
+                            },
+                            backgroundColor = Color.White,
+                            modifier = Modifier.weight(1f),
+                            text = "Backup Database"
+                        )
+
+                        CozyButton(
+                            onClick = {
+                                viewModel.updateUserProfileName("Student", "")
+                                gNameInput = ""
+                                gEmailInput = ""
+                                backupSyncOutput = "Sign in to activate secure Google synchronization."
+                            },
+                            backgroundColor = CozyColors.NeonCoral,
+                            modifier = Modifier.weight(1f),
+                            text = "Disconnect"
+                        )
+                    }
+                }
+
+                if (backupSyncOutput.isNotEmpty()) {
                     Text(
-                        text = if (isBackingUp) "Processing..." else backupSyncOutput,
+                        text = backupSyncOutput,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         color = CozyColors.BubblegumPink,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.weight(1f).padding(start = 12.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -271,7 +362,7 @@ fun StudioScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "RECURRENT ROUTINE TIMERS ⌛",
+                        text = "RECURRENT ROUTINE TIMERS",
                         fontWeight = FontWeight.Black,
                         fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,

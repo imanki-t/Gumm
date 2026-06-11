@@ -69,6 +69,8 @@ data class RecurrentSkill(
 @Entity(tableName = "user_profiles")
 data class UserProfile(
     @PrimaryKey val id: Int = 1,
+    val userName: String = "Student",
+    val googleEmail: String? = null,
     val gradeLevel: String = "High School",
     val availableHoursWeekday: Float = 2.0f,
     val availableHoursWeekend: Float = 4.0f,
