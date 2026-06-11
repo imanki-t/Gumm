@@ -252,7 +252,7 @@ fun StudioScreen(
                         CozyTextField(
                             value = gNameInput,
                             onValueChange = { gNameInput = it },
-                            placeholder = "Enter Full Name (e.g. Pritikumari)"
+                            placeholder = "Enter Full Name (e.g. Alex)"
                         )
 
                         Text("Enter Google Gmail address:", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.Black)

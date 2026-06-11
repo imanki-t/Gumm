@@ -64,7 +64,7 @@ fun HomeworkScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top Header
+        // Top Header Row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -84,18 +84,18 @@ fun HomeworkScreen(
                     color = Color.Gray
                 )
             }
-
-            CozyButton(
-                onClick = {
-                    if (subjects.isNotEmpty()) {
-                        selectedSubjectId = subjects.first().id
-                        showAddHomeworkDialog = true
-                    }
-                },
-                backgroundColor = CozyColors.LightPink,
-                text = "+ Add Task"
-            )
         }
+
+        // Horizontal Add Task button beneath the header row
+        CozyButton(
+            onClick = {
+                selectedSubjectId = subjects.firstOrNull()?.id
+                showAddHomeworkDialog = true
+            },
+            backgroundColor = CozyColors.LightPink,
+            text = "➕ Add Task",
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // Segmented Bin selector
         Row(
@@ -309,23 +309,33 @@ fun HomeworkScreen(
 
                     // Subject folder selector
                     Text("Select Subject:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Row(
-                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        subjects.forEach { sub ->
-                            val active = selectedSubjectId == sub.id
-                            Box(
-                                modifier = Modifier
-                                    .background(
-                                        if (active) Color(android.graphics.Color.parseColor(sub.color)) else Color.White,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .border(2.dp, Color.Black, RoundedCornerShape(8.dp))
-                                    .clickable { selectedSubjectId = sub.id }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp)
-                            ) {
-                                Text(sub.name, fontSize = 12.sp, fontWeight = FontWeight.Black)
+                    if (subjects.isEmpty()) {
+                        Text(
+                            "No subject folder configured. A default 'General' category will be auto-created for this task.",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = CozyColors.NeonCoral,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            subjects.forEach { sub ->
+                                val active = selectedSubjectId == sub.id
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            if (active) Color(android.graphics.Color.parseColor(sub.color)) else Color.White,
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .border(2.dp, Color.Black, RoundedCornerShape(8.dp))
+                                        .clickable { selectedSubjectId = sub.id }
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text(sub.name, fontSize = 12.sp, fontWeight = FontWeight.Black)
+                                }
                             }
                         }
                     }
@@ -356,10 +366,15 @@ fun HomeworkScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         CozyButton(
                             onClick = {
-                                val matchSub = selectedSubjectId
-                                if (currentTitle.isNotEmpty() && matchSub != null) {
+                                if (currentTitle.isNotEmpty()) {
                                     val finalMs = System.currentTimeMillis() + (daysUntilDue * 24 * 60 * 60 * 1000L)
-                                    viewModel.addHomework(matchSub, currentTitle, currentDesc, finalMs, estimatedMinutes)
+                                    viewModel.addHomeworkWithFallbackSubject(
+                                        subjectId = selectedSubjectId,
+                                        title = currentTitle,
+                                        description = currentDesc,
+                                        dueDate = finalMs,
+                                        estMinutes = estimatedMinutes
+                                    )
                                     currentTitle = ""
                                     currentDesc = ""
                                     showAddHomeworkDialog = false

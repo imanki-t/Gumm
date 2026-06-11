@@ -97,95 +97,100 @@ fun SyllabusScreen(
             )
         }
 
-        // Horizontal Configurator Box below the button and header
+        // Compact Configurator Box below the button and header
         if (showAddSubjectDialog) {
             CozyCard(
                 backgroundColor = Color.White,
-                cornerRadius = 20.dp
+                cornerRadius = 16.dp
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(4.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "NEW SUBJECT HORIZONTAL CONFIGURATOR",
+                        text = "NEW SUBJECT CONFIGURATOR",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.Black
                     )
 
+                    CozyTextField(
+                        value = currentSubjectName,
+                        onValueChange = { currentSubjectName = it },
+                        placeholder = "Subject Title (e.g. Science)"
+                    )
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Title input (weighted)
-                        Box(modifier = Modifier.weight(1.5f)) {
-                            CozyTextField(
-                                value = currentSubjectName,
-                                onValueChange = { currentSubjectName = it },
-                                placeholder = "Subject Title (e.g. Science)"
-                            )
-                        }
-
-                        // Colors
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            pastelColors.forEach { (hex, name) ->
-                                val isChosen = selectedColor == hex
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(
-                                            Color(android.graphics.Color.parseColor(hex)),
-                                            CircleShape
-                                        )
-                                        .border(if (isChosen) 2.5.dp else 1.dp, Color.Black, CircleShape)
-                                        .clickable { selectedColor = hex }
-                                )
-                            }
-                        }
-
-                        // Icons
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            cuteIcons.forEach { (name, vec) ->
-                                val isChosen = selectedIcon == name
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(
-                                            if (isChosen) CozyColors.BananaYellow else Color.White,
-                                            RoundedCornerShape(6.dp)
-                                        )
-                                        .border(1.5.dp, Color.Black, RoundedCornerShape(6.dp))
-                                        .clickable { selectedIcon = name }
-                                        .padding(2.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(imageVector = vec, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Column {
+                            Text("Theme Color", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color.Black)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                pastelColors.forEach { (hex, name) ->
+                                    val isChosen = selectedColor == hex
+                                    Box(
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .background(
+                                                Color(android.graphics.Color.parseColor(hex)),
+                                                CircleShape
+                                            )
+                                            .border(if (isChosen) 2.dp else 1.dp, Color.Black, CircleShape)
+                                            .clickable { selectedColor = hex }
+                                    )
                                 }
                             }
                         }
 
-                        // Submit
-                        CozyButton(
-                            onClick = {
-                                if (currentSubjectName.isNotEmpty()) {
-                                    viewModel.addSubject(currentSubjectName, selectedColor, selectedIcon)
-                                    currentSubjectName = ""
-                                    showAddSubjectDialog = false
+                        Column {
+                            Text("Category Icon", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color.Black)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                cuteIcons.forEach { (name, vec) ->
+                                    val isChosen = selectedIcon == name
+                                    Box(
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .background(
+                                                if (isChosen) CozyColors.BananaYellow else Color.White,
+                                                RoundedCornerShape(6.dp)
+                                            )
+                                            .border(1.5.dp, Color.Black, RoundedCornerShape(6.dp))
+                                            .clickable { selectedIcon = name }
+                                            .padding(2.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(imageVector = vec, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    }
                                 }
-                            },
-                            backgroundColor = CozyColors.MintGreen,
-                            text = "Add Node ✔"
-                        )
+                            }
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    CozyButton(
+                        onClick = {
+                            if (currentSubjectName.isNotEmpty()) {
+                                viewModel.addSubject(currentSubjectName, selectedColor, selectedIcon)
+                                currentSubjectName = ""
+                                showAddSubjectDialog = false
+                            }
+                        },
+                        backgroundColor = CozyColors.MintGreen,
+                        text = "Add Node ✔",
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }

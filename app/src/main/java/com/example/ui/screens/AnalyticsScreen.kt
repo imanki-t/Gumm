@@ -101,16 +101,17 @@ fun AnalyticsScreen(
                             strokeWidth = 3.dp
                         )
                     } else {
-                        IconButton(
-                            onClick = { viewModel.refreshPeakEfficiency() },
+                        // Static indicator icon instead of a refresh button as requested
+                        Box(
                             modifier = Modifier
-                                .background(CozyColors.CreamBackground, RoundedCornerShape(10.dp))
+                                .background(CozyColors.BananaYellow, RoundedCornerShape(10.dp))
                                 .border(2.dp, Color.Black, RoundedCornerShape(10.dp))
-                                .size(36.dp)
+                                .size(36.dp),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Recalculate Focus Efficiency",
+                                imageVector = Icons.Default.OfflineBolt,
+                                contentDescription = "Offline Efficiency Engine",
                                 tint = Color.Black,
                                 modifier = Modifier.size(20.dp)
                             )

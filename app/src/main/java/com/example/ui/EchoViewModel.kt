@@ -147,22 +147,47 @@ class EchoViewModel(application: Application) : AndroidViewModel(application) {
         if (promptToUse.isBlank()) return
         gummAiQuery.value = ""
         isGummAiLoading.value = true
-        gummAiResponse.value = "Calibrating biological core... synapsing neural matrix... Gumm is thinking 🔮"
+        gummAiResponse.value = "Calibrating offline cognitive core... 🧠"
         viewModelScope.launch {
-            try {
-                val apiKey = com.example.BuildConfig.GEMINI_API_KEY
-                if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
-                    gummAiResponse.value = "Unable to connect with Gumm AI. Please enter a valid 'GEMINI_API_KEY' in the AI Studio Secrets panel to enable Gumm's live cognitive neural engine! 🪐\n\n(Local on-device statistical learning models remain fully active and running!)"
-                    return@launch
+            kotlinx.coroutines.delay(650) // Simulated local search delay
+            val promptLower = promptToUse.lowercase()
+            
+            val response = when {
+                promptLower.contains("recall") || promptLower.contains("study plan") || promptLower.contains("syllabus") -> {
+                    """
+                    🎯 **Gumm Active Recall Blueprint**:
+                    1. **Feynman Synthesis**: Teach the topic to an imaginary student with zero jargon.
+                    2. **Closed-Book Assessment**: Write down everything you remember in 10 minutes *before* opening your notes.
+                    3. **Progressive Intervals**: Review again in 24 hours, then 3 days, then 7 days to seed it into long-term memory.
+                    """.trimIndent()
                 }
-                val systemInstruction = "You are Gumm, a friendly, ultra-knowledgeable, cozy-pop styled AI study coach for high school and college students. Provide actionable, extremely concise, and encouraging study strategy tips or advice."
-                val response = GummEngine.askGeminiDirect(promptToUse, systemInstruction, apiKey)
-                gummAiResponse.value = response
-            } catch (e: Exception) {
-                gummAiResponse.value = "Synapse latency error: ${e.localizedMessage ?: "Failed to reach Gumm AI brain."}"
-            } finally {
-                isGummAiLoading.value = false
+                promptLower.contains("anxiety") || promptLower.contains("nervous") || promptLower.contains("scared") || promptLower.contains("comfort") -> {
+                    """
+                    🌸 **Deep Breath, Gumm is Here**:
+                    You are much more than a score or grade. Take a slow deep breath (4-second inhale, 4-second hold, 4-second exhale). 
+                    
+                    Start with just *one* small, easy task today. Consistent 15-minute bursts are much better than exhaustively cramming. You've got this! Box breathing resets your amygdala. Let's start the breathing timer whenever you are ready!
+                    """.trimIndent()
+                }
+                promptLower.contains("physics") || promptLower.contains("math") || promptLower.contains("science") || promptLower.contains("mechanics") -> {
+                    """
+                    🚀 **Gumm STEM Strategy**:
+                    - **Derivation vs. Memorization**: Don't just memorize formulas. Understand *how* the variables relate.
+                    - **Error Log**: Keep a custom list of every problem you get wrong. Solve them again 48 hours later.
+                    - **Micro-Sprinting**: Block out 25 minutes of uninterrupted practice. One equation at a time.
+                    """.trimIndent()
+                }
+                else -> {
+                    """
+                    ✨ **Gumm Offline Study Tip**:
+                    Consistency is your superpower! Organize your homework queue using the local Proximity Smart-sorting algorithm under the Ledger tab. 
+                    
+                    Try setting a **Time Budget** on your Dashboard to get a customized, high-density agenda. Study smart, rest well, and keep your energy high!
+                    """.trimIndent()
+                }
             }
+            gummAiResponse.value = response
+            isGummAiLoading.value = false
         }
     }
 
@@ -367,6 +392,35 @@ class EchoViewModel(application: Application) : AndroidViewModel(application) {
             repository.insertHomework(
                 Homework(
                     subjectId = subjectId,
+                    title = title,
+                    description = description,
+                    dueDate = dueDate,
+                    estimatedMinutes = estMinutes,
+                    isCompleted = false
+                )
+            )
+        }
+    }
+
+    fun addHomeworkWithFallbackSubject(
+        subjectId: Int?,
+        title: String,
+        description: String,
+        dueDate: Long,
+        estMinutes: Int
+    ) {
+        viewModelScope.launch {
+            val finalSubjectId = if (subjectId == null) {
+                // Auto create "General" subject
+                db.echoDao().insertSubject(
+                    Subject(name = "General", color = "#FFD1DC", iconName = "Book")
+                ).toInt()
+            } else {
+                subjectId
+            }
+            repository.insertHomework(
+                Homework(
+                    subjectId = finalSubjectId,
                     title = title,
                     description = description,
                     dueDate = dueDate,

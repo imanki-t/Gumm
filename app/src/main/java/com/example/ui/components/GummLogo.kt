@@ -121,10 +121,7 @@ fun GummSplashScreen(
     }
 
     LaunchedEffect(Unit) {
-        delay(800)
-        // Fade in logo title text
-        textAlpha.animateTo(1f, animationSpec = tween(800))
-        delay(1400)
+        delay(3000)
         onFinished()
     }
 
@@ -136,55 +133,17 @@ fun GummSplashScreen(
             .clickable { onFinished() }, // bypassable anytime
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        Box(
+            modifier = Modifier
+                .border(5.dp, Color.Black, RoundedCornerShape(28.dp))
+                .background(Color(0xFFD35D3B), RoundedCornerShape(28.dp))
+                .padding(24.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .border(5.dp, Color.Black, RoundedCornerShape(28.dp))
-                    .background(Color(0xFFD35D3B), RoundedCornerShape(28.dp))
-                    .padding(24.dp)
-            ) {
-                GummLogoCanvas(
-                    logoColor = Color.White,
-                    rotationDegrees = 0f,
-                    scale = scale.value
-                )
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = "G U M M",
-                    color = Color.White,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 32.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.scale(scale.value)
-                )
-
-                Text(
-                    text = "Cozy Cognitive Student Ecosystem",
-                    color = Color.White.copy(alpha = 0.85f),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.scale(scale.value)
-                )
-
-                Text(
-                    text = "tap to skip · offline-only brain protection core",
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontWeight = FontWeight.Black,
-                    fontSize = 10.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.scale(scale.value)
-                )
-            }
+            GummLogoCanvas(
+                logoColor = Color.White,
+                rotationDegrees = 0f,
+                scale = scale.value
+            )
         }
     }
 }

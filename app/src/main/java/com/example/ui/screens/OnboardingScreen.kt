@@ -197,13 +197,13 @@ fun OnboardingScreen(
                                                 color = Color.Black
                                             )
                                             Text(
-                                                text = connectedGoogleName ?: "Pritikumari",
+                                                text = connectedGoogleName ?: "Scholar",
                                                 fontWeight = FontWeight.Black,
                                                 fontSize = 15.sp,
                                                 color = Color.Black
                                             )
                                             Text(
-                                                text = connectedGoogleEmail ?: "pritikumari256891@gmail.com",
+                                                text = connectedGoogleEmail ?: "student@gumm.app",
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 12.sp,
                                                 color = Color.DarkGray
@@ -219,8 +219,12 @@ fun OnboardingScreen(
                                 )
                             } else {
                                 // Google Sign In Button
+                                // Clicking immediately executes the automated OAuth simulation login process
                                 Button(
-                                    onClick = { isGoogleRedirectOpen = true },
+                                    onClick = {
+                                        isSigningInGoogle = true
+                                        isGoogleRedirectOpen = true
+                                    },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                                     shape = RoundedCornerShape(12.dp),
                                     border = BorderStroke(3.dp, Color.Black),
@@ -605,17 +609,17 @@ fun OnboardingScreen(
                                         .border(2.dp, Color.Black, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("P", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
+                                    Text("S", color = Color.White, fontWeight = FontWeight.Black, fontSize = 20.sp)
                                 }
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Pritikumari",
+                                        text = "Scholar",
                                         fontWeight = FontWeight.Black,
                                         fontSize = 16.sp,
                                         color = Color.Black
                                     )
                                     Text(
-                                        text = "pritikumari256891@gmail.com",
+                                        text = "student@gumm.app",
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Gray,
                                         fontSize = 13.sp
@@ -693,8 +697,8 @@ fun OnboardingScreen(
                             // Simulated trigger delay returning back to OnboardingScreen!
                             LaunchedEffect(Unit) {
                                 delay(1600)
-                                connectedGoogleEmail = "pritikumari256891@gmail.com"
-                                connectedGoogleName = "Pritikumari"
+                                connectedGoogleEmail = "student@gumm.app"
+                                connectedGoogleName = "Scholar"
                                 isSigningInGoogle = false
                                 isGoogleRedirectOpen = false
                                 // Auto transition to academic track setup step!
