@@ -87,13 +87,11 @@ class EchoViewModel(application: Application) : AndroidViewModel(application) {
             }.collectLatest { event ->
                 isPeakEfficiencyLoading.value = true
                 try {
-                    val apikey = com.example.BuildConfig.GEMINI_API_KEY
                     val result = GummEngine.getPeakEfficiencyWindows(
                         logs = event.sessions,
                         subjects = event.subs,
                         chapters = event.chaps,
-                        userProfile = event.profile,
-                        apiKey = apikey
+                        userProfile = event.profile
                     )
                     peakEfficiencyWindows.value = result
                 } catch (e: Exception) {
@@ -116,13 +114,11 @@ class EchoViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             isPeakEfficiencyLoading.value = true
             try {
-                val apikey = com.example.BuildConfig.GEMINI_API_KEY
                 val result = GummEngine.getPeakEfficiencyWindows(
                     logs = studySessions.value,
                     subjects = subjects.value,
                     chapters = chapters.value,
-                    userProfile = userProfile.value,
-                    apiKey = apikey
+                    userProfile = userProfile.value
                 )
                 peakEfficiencyWindows.value = result
             } catch (e: Exception) {
