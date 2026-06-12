@@ -55,8 +55,10 @@ class MainActivity : ComponentActivity() {
 
             CozyTheme(darkTheme = useDarkTheme) {
                 if (showSplashState) {
+                    // Pass theme so splash matches light/dark mode
                     GummSplashScreen(
-                        onFinished = { showSplashState = false }
+                        onFinished = { showSplashState = false },
+                        useDarkTheme = useDarkTheme
                     )
                 } else {
                     Scaffold(
@@ -66,7 +68,11 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.background)
+                                // Light pink tint global background
+                                .background(
+                                    if (useDarkTheme) CozyColors.DarkIndigoBackground
+                                    else Color(0xFFFFF0F4)
+                                )
                                 .padding(bottom = innerPadding.calculateBottomPadding())
                         ) {
                             GeometricBackground(darkTheme = useDarkTheme)
@@ -85,7 +91,7 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier.size(64.dp)
                                     )
                                     Text(
-                                        text = "Connecting with Gumm... 🍡",
+                                        text = "Starting Gumm Engine... 🍡",
                                         fontWeight = FontWeight.Black,
                                         fontSize = 16.sp,
                                         color = Color.Black,
@@ -95,7 +101,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         } else if (!isOnboardedState) {
-                            // Onboarding questionnaire Survey Screen with Kawaii Background
                             Box(modifier = Modifier.fillMaxSize()) {
                                 KawaiiBackground(modifier = Modifier.fillMaxSize())
                                 OnboardingScreen(
@@ -104,13 +109,12 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         } else {
-                            // Main Application Flow Routing
                             Box(modifier = Modifier.fillMaxSize()) {
                                 AnimatedContent(
                                     targetState = currentTab,
                                     transitionSpec = {
-                                        (fadeIn(animationSpec = tween(220, delayMillis = 60)) + 
-                                         scaleIn(initialScale = 0.95f, animationSpec = tween(220, delayMillis = 60)))
+                                        (fadeIn(animationSpec = tween(220, delayMillis = 60)) +
+                                         scaleIn(initialScale = 0.96f, animationSpec = tween(220, delayMillis = 60)))
                                          .togetherWith(fadeOut(animationSpec = tween(120)))
                                     },
                                     label = "NavTransition"
@@ -141,7 +145,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
-                                // Interactive Floating tactile screen Navigation Pill
                                 CozyBottomNavigationBar(
                                     currentTab = currentTab,
                                     onTabSelected = { appViewModel.currentNavigationTab.value = it },
@@ -150,7 +153,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        // Full screen countdown Study Timer Focus block overlay
                         FocusTimerOverlay(
                             viewModel = appViewModel,
                             modifier = Modifier.fillMaxSize()
@@ -172,10 +174,10 @@ fun CozyBottomNavigationBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 24.dp, start = 20.dp, end = 20.dp, top = 10.dp)
+            .padding(bottom = 20.dp, start = 24.dp, end = 24.dp, top = 8.dp)
             .background(Color.White, RoundedCornerShape(50.dp))
             .border(3.dp, Color.Black, RoundedCornerShape(50.dp))
-            .padding(horizontal = 14.dp, vertical = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -183,33 +185,47 @@ fun CozyBottomNavigationBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             listOf(
-                "dashboard" to Icons.Default.Dashboard,
-                "syllabus" to Icons.Default.Book,
-                "homework" to Icons.Default.Assignment,
-                "analytics" to Icons.Default.Timeline,
-                "studio" to Icons.Default.Palette
-            ).forEach { (tab, icon) ->
+                Triple("dashboard", Icons.Default.Dashboard, "Home"),
+                Triple("syllabus", Icons.Default.Book, "Study"),
+                Triple("homework", Icons.Default.Assignment, "Tasks"),
+                Triple("analytics", Icons.Default.Timeline, "Stats"),
+                Triple("studio", Icons.Default.Palette, "Studio")
+            ).forEach { (tab, icon, label) ->
                 val active = currentTab == tab
-                Box(
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .background(
-                            if (active) CozyColors.BubblegumPink else Color.Transparent,
-                            CircleShape
-                        )
-                        .border(
-                            if (active) 2.dp else 0.dp,
-                            if (active) Color.Black else Color.Transparent,
-                            CircleShape
-                        )
                         .clickable { onTabSelected(tab) }
-                        .padding(10.dp)
+                        .padding(horizontal = 4.dp)
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = tab,
-                        tint = if (active) Color.White else Color.Black,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                if (active) CozyColors.BubblegumPink else Color.Transparent,
+                                CircleShape
+                            )
+                            .border(
+                                if (active) 2.dp else 0.dp,
+                                if (active) Color.Black else Color.Transparent,
+                                CircleShape
+                            )
+                            .padding(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = tab,
+                            tint = if (active) Color.White else Color(0xFF888888),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    if (active) {
+                        Text(
+                            text = label,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Black,
+                            color = CozyColors.BubblegumPink
+                        )
+                    }
                 }
             }
         }
