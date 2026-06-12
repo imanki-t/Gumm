@@ -86,16 +86,17 @@ fun HomeworkScreen(
             }
         }
 
-        // Horizontal Add Task button beneath the header row
-        CozyButton(
-            onClick = {
-                selectedSubjectId = subjects.firstOrNull()?.id
-                showAddHomeworkDialog = true
-            },
-            backgroundColor = CozyColors.LightPink,
-            text = "➕ Add Task",
-            modifier = Modifier.fillMaxWidth()
-        )
+        // Compact Add Task button - natural size, not full width
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+            CozyButton(
+                onClick = {
+                    selectedSubjectId = subjects.firstOrNull()?.id
+                    showAddHomeworkDialog = true
+                },
+                backgroundColor = CozyColors.LightPink,
+                text = "➕ Add Task"
+            )
+        }
 
         // Segmented Bin selector
         Row(
