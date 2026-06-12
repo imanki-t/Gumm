@@ -53,7 +53,7 @@ data class PeakEfficiencyValue(
 object GummEngine {
 
     // Gumm Offline Cognitive AI Solver
-    suspend fun askGeminiDirect(prompt: String, systemInstruction: String, apiKey: String): String {
+    suspend fun askGeminiDirect(prompt: String, systemInstruction: String): String {
         val query = prompt.lowercase(Locale.getDefault())
         return when {
             query.contains("comfort") || query.contains("anxious") || query.contains("anxiety") || query.contains("stress") || query.contains("scared") || query.contains("worry") -> {
@@ -110,12 +110,10 @@ object GummEngine {
         logs: List<StudySessionLog>,
         subjects: List<Subject>,
         chapters: List<Chapter>,
-        userProfile: UserProfile?,
-        apiKey: String
+        userProfile: UserProfile?
     ): List<PeakEfficiencyValue> {
-        // Fallback to local rule-based analytics engine representing local AI
         val locals = getLocalPeakEfficiencyWindows(logs, subjects, chapters, userProfile)
-        return locals.map { it.copy(isAiGenerated = true) } // Label with LOCAL AI indicator
+        return locals.map { it.copy(isAiGenerated = true) }
     }
 
     private fun parseGeminiResponse(text: String, subjects: List<Subject>): List<PeakEfficiencyValue> {
